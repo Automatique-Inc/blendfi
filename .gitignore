@@ -19,3 +19,26 @@ build
 # OS
 .DS_Store
 Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+
+# Coverage
+coverage
+.nyc_output
+
+# Editors/IDE
+.vscode
+.idea
+.history
+.eslintcache
+
+# Expo / React Native
+.expo
+web-build
+.metro-health-check*
+expo-env.d.ts
+
+# Misc
+pnpm-debug.log*
+lerna-debug.log*
