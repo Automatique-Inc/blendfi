@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, Text } from 'react-native';
 import { Session } from '@supabase/supabase-js';
-import PlaidLink from './PlaidLink';
+import BankLinkComponent from './BankLinkComponent';
 import { createPlaidLinkToken, exchangePublicToken } from '../lib/api';
 
 interface PlaidLinkScreenProps {
@@ -17,11 +17,14 @@ export default function PlaidLinkScreen({ session }: PlaidLinkScreenProps) {
 
   const fetchLinkToken = async () => {
     try {
+      console.log('Fetching link token for user:', session.user.id);
+      console.log('Session access token exists:', !!session.access_token);
       const token = await createPlaidLinkToken(session);
+      console.log('Link token received:', token);
       setLinkToken(token);
     } catch (error) {
       console.error('Error fetching link token:', error);
-      Alert.alert('Error', 'Failed to initialize bank connection');
+      Alert.alert('Error', `Failed to initialize bank connection: ${error.message}`);
     }
   };
 
@@ -67,7 +70,7 @@ export default function PlaidLinkScreen({ session }: PlaidLinkScreenProps) {
         <Text style={styles.userIdText}>User ID: {session.user.id}</Text>
       </View>
       
-      <PlaidLink
+      <BankLinkComponent
         linkToken={linkToken}
         onSuccess={handlePlaidSuccess}
         onExit={handlePlaidExit}

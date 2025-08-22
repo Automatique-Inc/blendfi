@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { usePlaidLink } from 'react-plaid-link';
+import { create, open, dismissLink } from 'react-native-plaid-link-sdk';
 
 interface PlaidLinkProps {
   linkToken: string;
@@ -9,30 +9,40 @@ interface PlaidLinkProps {
 }
 
 export default function PlaidLink({ linkToken, onSuccess, onExit }: PlaidLinkProps) {
-  const { open, ready } = usePlaidLink({
-    token: linkToken,
-    onSuccess: (public_token, metadata) => {
-      console.log('Plaid Link success:', { public_token, metadata });
-      onSuccess(public_token, metadata);
-    },
-    onExit: (err, metadata) => {
-      console.log('Plaid Link exit:', { err, metadata });
-      onExit?.({ error: err, metadata });
-    },
-  });
-
-  const handleLinkBank = () => {
+  const handleLinkBank = async () => {
     if (!linkToken) {
       Alert.alert('Error', 'Link token is required');
       return;
     }
 
-    if (!ready) {
-      Alert.alert('Error', 'Plaid Link not ready');
-      return;
-    }
+    try {
+      console.log('Creating Plaid Link with token:', linkToken);
+      
+      // Create link configuration
+      await create({
+        token: linkToken,
+        noLoadingState: false,
+      });
 
-    open();
+      console.log('Opening Plaid Link...');
+      
+      // Open Plaid Link with callbacks
+      await open({
+        onSuccess: (success) => {
+          console.log('Plaid Link success:', success);
+          onSuccess(success.publicToken, success.metadata);
+          dismissLink();
+        },
+        onExit: (exit) => {
+          console.log('Plaid Link exit:', exit);
+          onExit?.(exit);
+          dismissLink();
+        },
+      });
+    } catch (error) {
+      console.error('Error with Plaid Link:', error);
+      Alert.alert('Error', 'Failed to open Plaid Link');
+    }
   };
 
   return (
@@ -43,12 +53,11 @@ export default function PlaidLink({ linkToken, onSuccess, onExit }: PlaidLinkPro
       </Text>
       
       <TouchableOpacity
-        style={[styles.button, !ready && styles.buttonDisabled]}
+        style={styles.button}
         onPress={handleLinkBank}
-        disabled={!ready}
       >
         <Text style={styles.buttonText}>
-          {!ready ? 'Loading Plaid...' : 'Connect Bank Account'}
+          Connect Bank Account
         </Text>
       </TouchableOpacity>
     </View>
